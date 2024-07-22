@@ -1,6 +1,7 @@
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2
 
 def read_img(img_path):
     img = Image.open(img_path)
@@ -69,53 +70,61 @@ def RGB_to_sepia(img, img_path):
     save_img(sepia_image, rename_img_path(img_path, 'filter_sepia'))
 
 def apply_kernel(img_array, kernel):
-    # -k + 1 + 2p = 0
-    # p = (k - 1) / 2
     kernel_height, kernel_width = kernel.shape
     padding_height = kernel_height // 2
     padding_width = kernel_width // 2
-    padded_image = np.pad(img_array, ((padding_height, padding_height), (padding_width, padding_width), (0, 0)), mode='constant')
+    padded_image = np.pad(img_array, ((padding_height, padding_height), (padding_width, padding_width), (0, 0)), mode='edge')
     result_image = np.zeros_like(img_array)
 
     for x in range(img_array.shape[0]):
         for y in range(img_array.shape[1]):
             for z in range(img_array.shape[2]):
                 region = padded_image[x:x+kernel_height, y:y+kernel_width, z]
-                result_image[x][y][z] = np.sum(region*kernel)
+                result_image[x, y, z] = np.sum(region * kernel)
     
     result_image = np.clip(result_image, 0, 255)
     return result_image
-    
 
-def Blur_image(img, img_path):
+def blur_image(img, img_path):
     print("Làm mờ ảnh . . .")
     img_array = np.array(img)
-    kernel = np.ones((5, 5)) / 25
+    kernel = np.ones((3, 3)) / 9
     blur_image = apply_kernel(img_array, kernel)
     blur_image = Image.fromarray(blur_image.astype('uint8'))
     save_img(blur_image, rename_img_path(img_path, 'blur'))
 
-def Sharpen_image(img, img_path):
+def sharpen_image(img, img_path):
+    # img = cv2.imread('C:/Users/nguye/OneDrive/Desktop/LAB02_TUD/alo.png')
+    # kernel = np.array([[0, -1, 0],
+    #                 [-1, 5, -1],
+    #                 [0, -1, 0]])
+    # result_image = cv2.filter2D(img, -1, kernel)
+    # cv2.imwrite('result_image.jpg', result_image)     
     print("Làm sắc nét ảnh . . .")
+    img_array = np.array(img)
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    sharpen_image = apply_kernel(img_array, kernel)
+    sharpen_image = Image.fromarray(sharpen_image.astype('uint8'))
+    save_img(sharpen_image, rename_img_path(img_path, 'sharpen'))
 
-def Cut_image_in_size(img, img_path):
+def crop_center(img, img_path):
     print("")
 
-def Cut_image_circle(img, img_path):
+def crop_circle(img, img_path):
     print("Cut image in circle")
 
-def Cut_image_elips(img, img_path):
+def crop_ellipse(img, img_path):
     print("Cut image in elips")
 
-def ZoomIn2x(img, img_path):
+def zoom_in_2x(img, img_path):
     print("ZoomIn2x")
 
-def ZoomOut2x(img, img_path):
+def zoom_out_2x(img, img_path):
     print("ZoomOut2x")
 
 def main():
     #
-    img_path = 'C:\\Users\\nguye\\OneDrive\\Desktop\\LAB02_TUD\\image.jpg'
+    img_path = 'C:\\Users\\nguye\\OneDrive\\Desktop\\LAB02_TUD\\alo.png'
     img = read_img(img_path)
     # 
     print("0. Thực hiện tất cả.")
@@ -165,9 +174,9 @@ def main():
         print("1. Sharpen.")
         mode = int(input("Lựa chọn chế độ: "))
         if mode == 0:
-            Blur_image(img, img_path)
+            blur_image(img, img_path)
         elif mode == 1:
-            Sharpen_image(img, img_path)
+            sharpen_image(img, img_path)
         else:
             print("Giá trị không hợp lệ !")
     elif choose == 6:
@@ -181,7 +190,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # blur_kernel = np.ones((5, 5)) / 25
-    # print(blur_kernel.shape)
 
 
