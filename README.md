@@ -5,7 +5,7 @@
 + Cách 1: np.sum(a*b)
 + Cách 2:
 '''
-a = a.flatten()
-b = b.flatten()
+a = a.flatten();
+b = b.flatten();
 c = a @ b
 '''
