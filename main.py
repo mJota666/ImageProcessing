@@ -108,23 +108,47 @@ def sharpen_image(img, img_path):
     save_img(sharpen_image, rename_img_path(img_path, 'sharpen'))
 
 def crop_center(img, img_path):
-    print("")
+    print("Cắt ảnh trung tâm . . .")
+    img_array = np.array(img)
+    crop_width = img_array.shape[1] // 2
+    crop_height = img_array.shape[0] // 2
+    center_x = img_array.shape[1] // 2
+    center_y = img_array.shape[0] // 2
+    start_x = center_x - crop_width // 2
+    start_y = center_y - crop_height // 2
+    cropped_image = img_array[start_x:start_x + crop_width, start_y:start_y + crop_height]
+    cropped_image = Image.fromarray(cropped_image.astype('uint8'))
+    save_img(cropped_image, rename_img_path(img_path, 'cropped_center'))
 
 def crop_circle(img, img_path):
-    print("Cut image in circle")
+    print("Cắt ảnh theo hình tròn . . .")
+    img_array = np.array(img)
+    img_width = img_array.shape[1]
+    img_height = img_array.shape[0]
+    center_x = img_width // 2
+    center_y = img_height // 2
+    radius = min(center_x, center_y)
+    Y, X = np.ogrid[0:img_width, 0:img_height]
+    distance_to_center = np.sqrt((X-center_x)**2 + (Y-center_y)**2)
+    mask = distance_to_center <= radius
+    cropped_circle_image = np.zeros_like(img_array)
+    cropped_circle_image[mask] = img_array[mask]
+    cropped_circle_image = Image.fromarray(cropped_circle_image.astype('uint8'))
+    save_img(cropped_circle_image, rename_img_path(img_path, 'cropped_circle')) 
 
 def crop_ellipse(img, img_path):
-    print("Cut image in elips")
+    print("Cắt ảnh theo hình ellipse . . .")
+    # img_array =
 
 def zoom_in_2x(img, img_path):
-    print("ZoomIn2x")
+    print("Phóng to 2 lần . . .")
 
 def zoom_out_2x(img, img_path):
-    print("ZoomOut2x")
+    print("Thu nhỏ 2 lần . . .")
 
 def main():
     #
-    img_path = 'C:\\Users\\nguye\\OneDrive\\Desktop\\LAB02_TUD\\alo.png'
+    img_path = 'C:\\Users\\nguye\\OneDrive\\Desktop\\LAB02_TUD\\lena.png'
     img = read_img(img_path)
     # 
     print("0. Thực hiện tất cả.")
@@ -134,7 +158,7 @@ def main():
     print("4. Chuyển đổi ảnh RGB thành ảnh xám/sepia.")
     print("5. Làm mờ/sắc nét ảnh.")
     print("6. Cắt ảnh theo kích thước.")
-    print("7. Cắt ảnh theo khung.")
+    print("7. Cắt ảnh theo khung tròn/ellipse.")
     print("8. Phóng to/Thu nhỏ 2x")
     choose = int(input("Lựa chọn chức năng xử lí ảnh: "))
     # 
@@ -160,29 +184,15 @@ def main():
         else:
             print("Giá trị không hợp lệ !")
     elif choose == 4:
-        print("0. Gray.")
-        print("1. Sepia.")
-        mode = int(input("Lựa chọn chế độ đổi màu: "))
-        if mode == 0:
-            RGB_to_gray(img, img_path)
-        elif mode == 1:
-            RGB_to_sepia(img, img_path)
-        else:
-            print("Giá trị không hợp lệ !")
+        RGB_to_gray(img, img_path)
+        RGB_to_sepia(img, img_path)
     elif choose == 5:
-        print("0. Blur.")
-        print("1. Sharpen.")
-        mode = int(input("Lựa chọn chế độ: "))
-        if mode == 0:
-            blur_image(img, img_path)
-        elif mode == 1:
-            sharpen_image(img, img_path)
-        else:
-            print("Giá trị không hợp lệ !")
+        blur_image(img, img_path)
+        sharpen_image(img, img_path)
     elif choose == 6:
-        print("6")
+        crop_center(img, img_path)
     elif choose == 7:
-        print("7")
+        crop_circle(img, img_path)
     elif choose == 8:
         print("8")
     else:
@@ -190,5 +200,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
