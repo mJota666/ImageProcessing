@@ -136,9 +136,40 @@ def crop_circle(img, img_path):
     cropped_circle_image = Image.fromarray(cropped_circle_image.astype('uint8'))
     save_img(cropped_circle_image, rename_img_path(img_path, 'cropped_circle')) 
 
+def create_ellipse_mask(X, Y, img_width, img_height, theta):
+    a = np.sqrt((img_width / 2)**2 + (img_height / 2)**2) / 2
+    b = (np.sqrt((img_width / 2)**2 + (img_height / 2)**2) - img_width / 2) / 2 + img_width / 2
+
+    cos_theta = np.cos(theta)
+    sin_theta = np.sin(theta)
+
+    term1 = ((cos_theta**2 / a**2) + (sin_theta**2 / b**2)) * X**2
+    term2 = 2 * cos_theta * sin_theta * (1/a**2 - 1/b**2) * X * Y
+    term3 = ((sin_theta**2 / a**2) + (cos_theta**2 / b**2)) * Y**2
+
+    mask = term1 + term2 + term3 <= 1
+
+    return mask
+
 def crop_ellipse(img, img_path):
     print("Cắt ảnh theo hình ellipse . . .")
-    # img_array =
+    img_array = np.array(img)
+    img_width = img_array.shape[1]
+    img_height = img_array.shape[0]
+    center_x = img_width // 2
+    center_y = img_height // 2
+    Y, X = np.ogrid[0:img_height, 0:img_width]
+    Y = Y - center_y
+    X = X - center_x
+    
+    mask1 = create_ellipse_mask(X, Y, img_width, img_height, np.pi / 4)
+    mask2 = create_ellipse_mask(X, Y, img_width, img_height, -np.pi / 4)
+
+    cropped_ellipe_image = np.zeros_like(img_array)
+    cropped_ellipe_image[mask1] = img_array[mask1]
+    cropped_ellipe_image[mask2] = img_array[mask2]
+    cropped_ellipe_image = Image.fromarray(cropped_ellipe_image.astype('uint8'))
+    save_img(cropped_ellipe_image, rename_img_path(img_path, 'cropped_ellipse'))
 
 def zoom_in_2x(img, img_path):
     print("Phóng to 2 lần . . .")
@@ -193,6 +224,7 @@ def main():
         crop_center(img, img_path)
     elif choose == 7:
         crop_circle(img, img_path)
+        crop_ellipse(img, img_path)
     elif choose == 8:
         print("8")
     else:
