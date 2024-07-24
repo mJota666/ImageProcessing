@@ -121,7 +121,7 @@ def crop_center(img, img_path):
     save_img(cropped_image, rename_img_path(img_path, 'cropped_center'))
 
 def crop_circle(img, img_path):
-    print("Cắt ảnh theo hình tròn . . .")
+    print("Cắt ảnh theo khung tròn . . .")
     img_array = np.array(img)
     img_width = img_array.shape[1]
     img_height = img_array.shape[0]
@@ -152,7 +152,7 @@ def create_ellipse_mask(X, Y, img_width, img_height, theta):
     return mask
 
 def crop_ellipse(img, img_path):
-    print("Cắt ảnh theo hình ellipse . . .")
+    print("Cắt ảnh theo khung ellipse . . .")
     img_array = np.array(img)
     img_width = img_array.shape[1]
     img_height = img_array.shape[0]
@@ -161,7 +161,7 @@ def crop_ellipse(img, img_path):
     Y, X = np.ogrid[0:img_height, 0:img_width]
     Y = Y - center_y
     X = X - center_x
-    
+
     mask1 = create_ellipse_mask(X, Y, img_width, img_height, np.pi / 4)
     mask2 = create_ellipse_mask(X, Y, img_width, img_height, -np.pi / 4)
 
@@ -171,11 +171,37 @@ def crop_ellipse(img, img_path):
     cropped_ellipe_image = Image.fromarray(cropped_ellipe_image.astype('uint8'))
     save_img(cropped_ellipe_image, rename_img_path(img_path, 'cropped_ellipse'))
 
-def zoom_in_2x(img, img_path):
-    print("Phóng to 2 lần . . .")
+def nearest_neighbor_interpolate(img_array, i, j):
+    i = round(i)
+    j = round(j)
 
-def zoom_out_2x(img, img_path):
-    print("Thu nhỏ 2 lần . . .")
+    i = min(max(i, 0), img_array.shape[0] - 1)
+    j = min(max(j, 0), img_array.shape[1] - 1)
+
+    return img_array[i, j]
+
+def scale_image(img, img_path, scale):
+    if scale >= 1:
+        mode = 'zoom_in_2x'
+        print("Phóng to 2 lần . . .")
+    else:
+        mode = 'zoom_out_2x'
+        print("Thu nhỏ 2 lần . . .")
+    img_array = np.array(img)
+    img_height, img_width, img_channels = img_array.shape
+    new_height = int(img_height * scale)
+    new_width = int(img_width * scale)
+    scaled_image = np.zeros((new_height, new_width, img_channels), dtype=np.uint8)
+
+    for y in range(new_height):
+        for x in range(new_width):
+            i = y / scale
+            j = x / scale
+            for c in range(img_channels):
+                scaled_image[y, x, c] = nearest_neighbor_interpolate(img_array[..., c], i, j)
+
+    scaled_image = Image.fromarray(scaled_image.astype('uint8'))
+    save_img(scaled_image, rename_img_path(img_path, mode))
 
 def main():
     #
@@ -226,7 +252,8 @@ def main():
         crop_circle(img, img_path)
         crop_ellipse(img, img_path)
     elif choose == 8:
-        print("8")
+        scale_image(img, img_path, 2)
+        scale_image(img, img_path, 1/2)
     else:
         print("Giá trị không hợp lệ !")
 
