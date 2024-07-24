@@ -15,50 +15,43 @@ def save_img(img, img_path):
 
 def rename_img_path(img_path, suffix):
     return f"{img_path.split('.')[0]}_{suffix}.{img_path.split('.')[1]}"
-    # img_path = img_path.replace('/', '\\')
-    # img_root = img_path.split('\\')[-1]
-    # img_name = img_root.split('.')[0]
-    # img_format = img_root.split('.')[-1]
-    # img_new_name = img_name + "_" + feature + '.' + img_format; 
-    # slash_idx = img_path.rfind('\\')
-    # img_new_path = img_path[:slash_idx+1] + img_new_name
-    # return img_new_path
 
-def change_brightness(img, img_path, brightness_factor=10):
+def change_brightness(img, img_path, brightness_factor=40):
     print("Thay đổi độ sáng . . .")
-    img_array = np.array(img)
+    img_array = np.array(img, dtype=np.float32)
     brightened_image = np.clip(img_array + brightness_factor, 0, 255)
     brightened_image = Image.fromarray(brightened_image.astype('uint8'))
     save_img(brightened_image, rename_img_path(img_path, "brightness"))
 
 def change_constrast(img, img_path, constrast_factor=1.5):
     print("Thay đổi độ tương phản . . .")
-    img_array = np.array(img)
-    contrasted_image = np.clip((img_array)* constrast_factor, 0, 255)
-    # mean = np.mean(img_array, axis=(0, 1), keepdims=True)
-    # contrasted_image = np.clip((img_array - mean) * constrast_factor + mean, 0, 255)
+    img_array = np.array(img, dtype=np.float32)
+    contrasted_image = np.clip(img_array * constrast_factor, 0, 255)
     contrasted_image = Image.fromarray(contrasted_image.astype('uint8'))
     save_img(contrasted_image, rename_img_path(img_path, "contrast"))
 
-def flip_image(img, img_path, mode):
-    print(f"Lật ảnh {mode} . . .")
-    mode = 'vertically' if mode == 'dọc' else 'horizontally' if mode == 'ngang' else mode
+def flip_image_vertically(img, img_path):
+    print("Lật ảnh dọc . . .")
     img_array = np.array(img)
-    if mode == 'vertically':
-        flipped_image = np.flipud(img_array)
-    elif mode == 'horizontally':
-        flipped_image = np.fliplr(img_array)
+    flipped_image = np.flipud(img_array)
     flipped_image = Image.fromarray(flipped_image.astype('uint8'))
-    save_img(flipped_image, rename_img_path(img_path, f'flip_{mode}'))
+    save_img(flipped_image, rename_img_path(img_path, 'flip_vertically'))
+
+def flip_image_horizontally(img, img_path):
+    print("Lật ảnh ngang . . .")
+    img_array = np.array(img)
+    flipped_image = np.fliplr(img_array)
+    flipped_image = Image.fromarray(flipped_image.astype('uint8'))
+    save_img(flipped_image, rename_img_path(img_path, 'flip_horizontally'))
 
 def RGB_to_gray(img, img_path):
     print("Chuyển đổi ảnh RGB thành ảnh xám . . .")
     img_array = np.array(img)
     gray_filter = np.array([0.2989, 0.587, 0.114])
     gray_image = np.dot(img_array[...,:3], gray_filter)
-    sepia_image = np.clip(sepia_image, 0, 255)
+    gray_image = np.clip(gray_image, 0, 255)
     gray_image = Image.fromarray(gray_image.astype('uint8'))
-    save_img(gray_image, rename_img_path(img_path, 'filter_gray'))
+    save_img(gray_image, rename_img_path(img_path, 'gray'))
 
 def RGB_to_sepia(img, img_path):
     print("Chuyển đổi ảnh RGB thành ảnh sepia . . .")
@@ -69,7 +62,7 @@ def RGB_to_sepia(img, img_path):
     sepia_image = np.dot(img_array[...,:3], sepia_filter.T)
     sepia_image = np.clip(sepia_image, 0, 255)
     sepia_image = Image.fromarray(sepia_image.astype('uint8'))
-    save_img(sepia_image, rename_img_path(img_path, 'filter_sepia'))
+    save_img(sepia_image, rename_img_path(img_path, 'sepia'))
 
 def apply_kernel(img_array, kernel):
     kernel_height, kernel_width = kernel.shape
@@ -114,7 +107,7 @@ def crop_center(img, img_path):
     start_y = center_y - crop_height // 2
     cropped_image = img_array[start_x:start_x + crop_width, start_y:start_y + crop_height]
     cropped_image = Image.fromarray(cropped_image.astype('uint8'))
-    save_img(cropped_image, rename_img_path(img_path, 'cropped_center'))
+    save_img(cropped_image, rename_img_path(img_path, 'crop_center'))
 
 def crop_circle(img, img_path):
     print("Cắt ảnh theo khung tròn . . .")
@@ -130,7 +123,7 @@ def crop_circle(img, img_path):
     cropped_circle_image = np.zeros_like(img_array)
     cropped_circle_image[mask] = img_array[mask]
     cropped_circle_image = Image.fromarray(cropped_circle_image.astype('uint8'))
-    save_img(cropped_circle_image, rename_img_path(img_path, 'cropped_circle')) 
+    save_img(cropped_circle_image, rename_img_path(img_path, 'crop_circle')) 
 
 def create_ellipse_mask(X, Y, img_width, img_height, theta):
     a = np.sqrt((img_width / 2)**2 + (img_height / 2)**2) / 2
@@ -165,7 +158,7 @@ def crop_ellipse(img, img_path):
     cropped_ellipe_image[mask1] = img_array[mask1]
     cropped_ellipe_image[mask2] = img_array[mask2]
     cropped_ellipe_image = Image.fromarray(cropped_ellipe_image.astype('uint8'))
-    save_img(cropped_ellipe_image, rename_img_path(img_path, 'cropped_ellipse'))
+    save_img(cropped_ellipe_image, rename_img_path(img_path, 'crop_ellipse'))
 
 def nearest_neighbor_interpolate(img_array, i, j):
     i = round(i)
@@ -218,8 +211,8 @@ def main():
     if choose == 0:
         change_brightness(img, img_path)
         change_constrast(img, img_path)
-        flip_image(img, img_path, 'ngang')
-        flip_image(img, img_path, 'dọc')
+        flip_image_horizontally(img, img_path)
+        flip_image_vertically(img, img_path)
         RGB_to_gray(img, img_path)
         RGB_to_sepia(img, img_path)
         blur_image(img, img_path)
@@ -238,9 +231,9 @@ def main():
         print("1. Lật dọc.")
         mode = int(input("Lựa chọn chế độ lật ảnh: "))
         if mode == 0:
-            flip_image(img, img_path, 'ngang')
+            flip_image_horizontally(img, img_path)
         elif mode == 1:
-            flip_image(img, img_path, 'dọc')
+            flip_image_vertically(img, img_path)
         else:
             print("Giá trị không hợp lệ !")
     elif choose == 4:
