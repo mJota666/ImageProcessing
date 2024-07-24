@@ -13,28 +13,30 @@ def show_img(img):
 def save_img(img, img_path):
     img.save(img_path)
 
-def rename_img_path(img_path, feature):
-    img_path = img_path.replace('/', '\\')
-    img_root = img_path.split('\\')[-1]
-    img_name = img_root.split('.')[0]
-    img_format = img_root.split('.')[-1]
-    img_new_name = img_name + "_" + feature + '.' + img_format; 
-    slash_idx = img_path.rfind('\\')
-    img_new_path = img_path[:slash_idx+1] + img_new_name
-    return img_new_path
+def rename_img_path(img_path, suffix):
+    return f"{img_path.split('.')[0]}_{suffix}.{img_path.split('.')[1]}"
+    # img_path = img_path.replace('/', '\\')
+    # img_root = img_path.split('\\')[-1]
+    # img_name = img_root.split('.')[0]
+    # img_format = img_root.split('.')[-1]
+    # img_new_name = img_name + "_" + feature + '.' + img_format; 
+    # slash_idx = img_path.rfind('\\')
+    # img_new_path = img_path[:slash_idx+1] + img_new_name
+    # return img_new_path
 
-def change_brightness(img, img_path, brightness_factor=30):
+def change_brightness(img, img_path, brightness_factor=10):
     print("Thay đổi độ sáng . . .")
     img_array = np.array(img)
     brightened_image = np.clip(img_array + brightness_factor, 0, 255)
     brightened_image = Image.fromarray(brightened_image.astype('uint8'))
     save_img(brightened_image, rename_img_path(img_path, "brightness"))
 
-def change_constrast(img, img_path, constrast_factor=1):
+def change_constrast(img, img_path, constrast_factor=1.5):
     print("Thay đổi độ tương phản . . .")
     img_array = np.array(img)
-    mean = np.mean(img_array, axis=(0, 1), keepdims=True)
-    contrasted_image = np.clip((img_array - mean) * constrast_factor + mean, 0, 255)
+    contrasted_image = np.clip((img_array)* constrast_factor, 0, 255)
+    # mean = np.mean(img_array, axis=(0, 1), keepdims=True)
+    # contrasted_image = np.clip((img_array - mean) * constrast_factor + mean, 0, 255)
     contrasted_image = Image.fromarray(contrasted_image.astype('uint8'))
     save_img(contrasted_image, rename_img_path(img_path, "contrast"))
 
@@ -52,8 +54,9 @@ def flip_image(img, img_path, mode):
 def RGB_to_gray(img, img_path):
     print("Chuyển đổi ảnh RGB thành ảnh xám . . .")
     img_array = np.array(img)
-    gray_filter = [0.2989, 0.587, 0.114]
+    gray_filter = np.array([0.2989, 0.587, 0.114])
     gray_image = np.dot(img_array[...,:3], gray_filter)
+    sepia_image = np.clip(sepia_image, 0, 255)
     gray_image = Image.fromarray(gray_image.astype('uint8'))
     save_img(gray_image, rename_img_path(img_path, 'filter_gray'))
 
@@ -63,9 +66,8 @@ def RGB_to_sepia(img, img_path):
     sepia_filter = np.array([[0.393, 0.769, 0.189],
                              [0.349, 0.686, 0.168],
                              [0.272, 0.534, 0.131]])
-    print(sepia_filter.T)
-    print(sepia_filter)
     sepia_image = np.dot(img_array[...,:3], sepia_filter.T)
+    sepia_image = np.clip(sepia_image, 0, 255)
     sepia_image = Image.fromarray(sepia_image.astype('uint8'))
     save_img(sepia_image, rename_img_path(img_path, 'filter_sepia'))
 
@@ -74,7 +76,7 @@ def apply_kernel(img_array, kernel):
     padding_height = kernel_height // 2
     padding_width = kernel_width // 2
     padded_image = np.pad(img_array, ((padding_height, padding_height), (padding_width, padding_width), (0, 0)), mode='edge')
-    result_image = np.zeros_like(img_array)
+    result_image = np.zeros_like(img_array, dtype=np.float32)
 
     for x in range(img_array.shape[0]):
         for y in range(img_array.shape[1]):
@@ -94,12 +96,6 @@ def blur_image(img, img_path):
     save_img(blur_image, rename_img_path(img_path, 'blur'))
 
 def sharpen_image(img, img_path):
-    # img = cv2.imread('C:/Users/nguye/OneDrive/Desktop/LAB02_TUD/alo.png')
-    # kernel = np.array([[0, -1, 0],
-    #                 [-1, 5, -1],
-    #                 [0, -1, 0]])
-    # result_image = cv2.filter2D(img, -1, kernel)
-    # cv2.imwrite('result_image.jpg', result_image)     
     print("Làm sắc nét ảnh . . .")
     img_array = np.array(img)
     kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
@@ -226,6 +222,13 @@ def main():
         flip_image(img, img_path, 'dọc')
         RGB_to_gray(img, img_path)
         RGB_to_sepia(img, img_path)
+        blur_image(img, img_path)
+        sharpen_image(img, img_path)
+        crop_center(img, img_path)
+        crop_circle(img, img_path)
+        crop_ellipse(img, img_path)
+        scale_image(img, img_path, 2)
+        scale_image(img, img_path, 1/2)
     elif choose == 1:
         change_brightness(img, img_path)
     elif choose == 2:
@@ -256,6 +259,6 @@ def main():
         scale_image(img, img_path, 1/2)
     else:
         print("Giá trị không hợp lệ !")
-
+    # 
 if __name__ == '__main__':
     main()
